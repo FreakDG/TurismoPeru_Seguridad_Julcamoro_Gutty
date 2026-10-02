@@ -1,102 +1,80 @@
 # TurismoPeru_Seguridad_Julcamoro_Gutty
 
 ## Nombre del proyecto
-**TurismoPeru_Seguridad_Julcamoro_Gutty** – Administración de la Seguridad de Base de Datos
-(Tercera Evaluación – Base de Datos II, Grupo B – Universidad Nacional de Cajamarca).
+TurismoPeru_Seguridad_Julcamoro_Gutty - Tercera evaluación de Base de Datos II (Grupo B), UNC.
 
 ## Descripción
-Implementación de un mecanismo básico de administración y seguridad para el sistema de
-información turística de la empresa **TurismoPeru**, sobre la base de datos
-`TurismoPeru_ADJG` (esquema `ADJG`) en SQL Server. El proyecto comprende:
-
-- Administración de logins, usuarios, roles y permisos bajo el principio de mínimo privilegio.
-- Estrategia de importación/exportación de datos con `bcp` y tabla de *staging*.
-- Respaldo completo de la base de datos en formato `.bacpac`.
-- Reporte analítico de clientes, reservas y pagos en Power BI.
-- Versionamiento de todos los scripts en GitHub.
+Administración de la seguridad de la base de datos `TurismoPeru_ADJG` (esquema `ADJG`) en SQL Server:
+usuarios, roles y permisos, importación con bcp, backup en .bacpac y un reporte en Power BI sobre
+clientes, reservas y pagos.
 
 ## Tecnologías utilizadas
-| Tecnología | Uso |
-|---|---|
-| SQL Server / T-SQL | Base de datos, seguridad, importación y respaldo |
-| SQL Server Management Studio (SSMS) | Ejecución de scripts |
-| bcp (Bulk Copy Program) | Exportación e importación de archivos CSV |
-| SqlPackage / SSMS Data-tier Application | Generación del backup `.bacpac` |
-| Power BI Desktop | Modelo, medidas DAX y dashboard |
-| Git / GitHub | Control de versiones |
+- SQL Server y SSMS
+- bcp
+- SqlPackage
+- Power BI Desktop
+- Git y GitHub
 
 ## Requisitos
-- SQL Server con autenticación mixta (SQL Server y Windows) habilitada.
-- Base de datos `TurismoPeru_ADJG` (esquema `ADJG`) creada y con datos.
-- Un login con permisos para crear logins (`securityadmin` o `sysadmin`) y para administrar la base (`db_owner`).
-- SQL Server Management Studio (SSMS) con **modo SQLCMD** disponible.
-- Utilidad `bcp` (incluida en las *SQL Server Command Line Utilities*).
-- SqlPackage o SSMS (*Export Data-tier Application*) para el `.bacpac`.
+- SQL Server con autenticación mixta.
+- Base de datos `TurismoPeru_ADJG` con datos.
+- Un login con permisos para crear logins y administrar la base.
+- bcp y SqlPackage instalados.
 - Power BI Desktop.
-- Git.
 
 ## Configuración
+Las credenciales van en un archivo `.env` que no se sube al repositorio (está en el `.gitignore`).
+Para configurarlo se copia la plantilla y se completan los valores:
 
-### Manejo seguro de credenciales
-Ningún script del repositorio contiene servidores, usuarios ni contraseñas reales.
-
-| Archivo | ¿Se publica? | Contenido |
-|---|---|---|
-| `.env.example` | Sí | Plantilla con las variables necesarias, **sin valores** |
-| `.env` | **No** (está en `.gitignore`) | Valores reales, solo en el equipo local |
-
-1. Copiar la plantilla y completar los valores:
-   ```bash
-   cp .env.example .env
-   ```
-2. Los scripts que requieren contraseñas (por ejemplo `01_logins.sql`) usan **variables SQLCMD**
-   en lugar de valores escritos:
-   ```sql
-   CREATE LOGIN ... WITH PASSWORD = '$(PWD_ADMIN)';
-   ```
-   Los valores se proporcionan al ejecutar, ya sea con `sqlcmd -v PWD_ADMIN="..."` o con
-   `:setvar` en SSMS (menú *Query → SQLCMD Mode*), sin guardarlos en el repositorio.
-3. Los comandos `bcp` se documentan con marcadores (`<SERVIDOR>`, `<USUARIO>`); si se omite `-P`,
-   `bcp` solicita la contraseña de forma interactiva.
-4. En las capturas de pantalla de `evidencias/` se ocultan servidor, usuario y contraseñas.
-
-Verificación antes de cada commit:
 ```bash
-git check-ignore -v .env   # debe indicar que .env está ignorado
-git status                 # .env no debe aparecer en la lista
+cp .env.example .env
 ```
+
+Las contraseñas de los logins no están escritas en los scripts, se pasan como variables SQLCMD
+(`$(PWD_ADMIN)`, etc.) al momento de ejecutar. En las capturas se ocultan servidor y credenciales.
 
 ## Estructura del proyecto
 ```
 TurismoPeru_Seguridad_Julcamoro_Gutty/
 ├── README.md
 ├── .gitignore
-├── .env.example                Plantilla de configuración (sin credenciales)
-├── 01_usuarios_roles/          Logins, usuarios, roles y permisos
-├── 02_importacion_exportacion/ Exportación (bcp) e importación con staging
-├── 03_backups/                 Backup FULL (.bacpac)
-├── 04_seguridad/               Pruebas de permisos (mínimo privilegio)
-├── 05_reportes/                Consultas base del reporte e interpretación
-├── 06_powerbi/                 Documentación del reporte Power BI
-└── evidencias/                 Capturas de pantalla
+├── .env.example
+├── 01_usuarios_roles/
+├── 02_importacion_exportacion/
+├── 03_backups/
+├── 04_seguridad/
+├── 05_reportes/
+├── 06_powerbi/
+└── evidencias/
 ```
 
 ## Scripts disponibles
-_(En construcción)_
+| Script | Descripción |
+|---|---|
+| `01_usuarios_roles/01_logins.sql` | Logins `ADJG_admin`, `ADJG_vendedor`, `ADJG_analista` |
+| `01_usuarios_roles/02_users.sql` | Usuarios en `TurismoPeru_ADJG` |
+| `01_usuarios_roles/03_roles.sql` | Roles `rol_vendedor`, `rol_analista` y `rol_admin` |
+
+Se usa el prefijo `ADJG` en los logins porque el servidor es compartido. `01_logins.sql` se ejecuta así:
+
+```bash
+set -a; source .env; set +a
+export SQLCMDPASSWORD="$DB_PASSWORD"
+sqlcmd -S "$DB_SERVER" -U "$DB_USER" -C -i 01_usuarios_roles/01_logins.sql \
+  -v PWD_ADMIN="$PWD_ADMIN" PWD_VENDEDOR="$PWD_VENDEDOR" PWD_ANALISTA="$PWD_ANALISTA"
+```
 
 ## Principio de mínimo privilegio
-_(En construcción)_
+Pendiente.
 
 ## Procedimiento de restauración
-_(En construcción)_
+Pendiente.
 
 ## Configuración del reporte
-_(En construcción)_
+Pendiente.
 
 ## Capturas de pantalla
-_(En construcción)_
+Pendiente.
 
 ## Autor
-**Antony David Julcamoro Gutty**
-Escuela Profesional de Ingeniería de Sistemas – Universidad Nacional de Cajamarca
-Curso: Base de Datos II – Grupo B
+Antony David Julcamoro Gutty - Ingeniería de Sistemas, Universidad Nacional de Cajamarca.
