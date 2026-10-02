@@ -173,10 +173,39 @@ Los usuarios quedaron enlazados a sus logins, los roles con sus miembros y los p
 (`ADJG_vendedor` puede leer `cliente` pero no borrar).
 
 ## Configuración del reporte
-Pendiente.
+El reporte está hecho en Power BI Desktop y se conecta a SQL Server con `ADJG_analista`, el usuario de solo
+lectura, en modo Importar.
+
+1. **Obtener datos → SQL Server**, servidor y base `TurismoPeru_ADJG`, credenciales de tipo *Base de datos*
+   con `ADJG_analista`.
+2. Cargar las tablas `Cliente` (con los nombres de `persona`), `Reserva`, `Pago`, `EstadoReserva`, `MedioPago`,
+   `Paquete` y `Alojamiento`, y crear la tabla `Calendario` en DAX.
+3. Relacionar `Cliente → Reserva → Pago` y agregar las dimensiones.
+4. Crear las medidas Total Reservas, Total Ingresos, Total Clientes y Ticket Promedio.
+
+El detalle del modelo, las medidas, las visualizaciones y las conclusiones está en
+[06_powerbi/README.md](06_powerbi/README.md). La interpretación de cada gráfico está en
+[05_reportes/README.md](05_reportes/README.md) y las consultas para validar los números en
+`05_reportes/consultas_reportes.sql`.
 
 ## Capturas de pantalla
-Pendiente.
+En las capturas se ocultó la dirección del servidor. Descripción de cada una en [evidencias/README.md](evidencias/README.md).
+
+| Conexión con ADJG_vendedor | Permisos rechazados |
+|---|---|
+| ![login](evidencias/login.png) | ![permisos](evidencias/permisos.png) |
+
+| Roles y permisos | Restauración del backup |
+|---|---|
+| ![seguridad](evidencias/seguridad.png) | ![backup](evidencias/backup.png) |
+
+| Dashboard Power BI | Modelo |
+|---|---|
+| ![reporte_powerbi](evidencias/reporte_powerbi.png) | ![reporte](evidencias/reporte.png) |
+
+**Historial en GitHub**
+
+![github](evidencias/github.png)
 
 ## Autor
 Antony David Julcamoro Gutty - Ingeniería de Sistemas, Universidad Nacional de Cajamarca.
