@@ -56,6 +56,9 @@ TurismoPeru_Seguridad_Julcamoro_Gutty/
 | `01_usuarios_roles/03_roles.sql` | Roles `rol_vendedor`, `rol_analista` y `rol_admin` |
 | `01_usuarios_roles/04_permisos.sql` | Permisos de cada rol |
 | `02_importacion_exportacion/importacion.sql` | Exportación con bcp, staging, validación e importación de clientes |
+| `03_backups/backup_full.sql` | Comando de exportación a .bacpac y conteo previo |
+| `03_backups/restauracion.sql` | Comando de importación, contraseñas de logins y verificación |
+| `03_backups/TurismoPeru_ADJG_Full.bacpac` | Backup completo (esquema y datos) |
 | `04_seguridad/pruebas_permisos.sql` | Pruebas de lo que cada perfil puede y no puede hacer |
 
 Se usa el prefijo `ADJG` en los logins porque el servidor es compartido. `01_logins.sql` se ejecuta así:
@@ -74,13 +77,15 @@ sqlcmd -S "$DB_SERVER" -U "$DB_USER" -C -i 01_usuarios_roles/01_logins.sql \
 |---|---|---|
 | `rol_vendedor` | SELECT e INSERT en `cliente`, `reserva` y `persona`; SELECT en `alojamiento` y `habitacion` | DELETE en `cliente` y `reserva`, ver pagos, administrar usuarios, roles o backups |
 | `rol_analista` | SELECT en `cliente`, `reserva`, `pago`, `alojamiento`, `habitacion`, `paquete`, `lugar_turistico`, `estado_reserva`, `medio_pago` y en los nombres de `persona` | INSERT, UPDATE y DELETE en el esquema `ADJG`, ver documento, teléfono o email, administrar usuarios, roles o backups |
-| `rol_admin` | Miembro de `db_owner` solo en `TurismoPeru_ADJG` | Ningún rol a nivel de servidor |
+| `rol_admin` | Miembro de `db_owner` solo en `TurismoPeru_ADJG`. El login `ADJG_admin` tiene además VIEW DEFINITION sobre los logins del vendedor y el analista | Ningún rol a nivel de servidor |
 
 Se agregaron algunos permisos que el enunciado no menciona:
 - **Vendedor - `persona`:** `cliente.id_persona` depende de `persona`, sin INSERT ahí no se podría registrar un cliente.
 - **Analista - `estado_reserva`, `medio_pago` y nombres de `persona`:** el reporte necesita mostrar estados,
   medios de pago y nombres de clientes. En `persona` el permiso es solo por columnas, así que el analista no ve
   datos personales como el documento o el email.
+- **Admin - VIEW DEFINITION en los logins:** sin esto, SqlPackage no puede resolver a qué login pertenece cada
+  usuario y el export falla (`SQL71501`). Solo permite ver esos dos logins, no modificarlos.
 
 ### ¿Por qué no asignar db_owner al vendedor o al analista?
 `db_owner` puede hacer cualquier cosa dentro de la base: modificar o borrar tablas y datos, crear usuarios, cambiar
@@ -138,7 +143,34 @@ la validación evita duplicados. En el archivo se repiten `12345678` (3 veces) y
 base son documentos de distinto tipo con el mismo número.
 
 ## Procedimiento de restauración
-Pendiente.
+El backup es `03_backups/TurismoPeru_ADJG_Full.bacpac`, generado con SqlPackage usando `ADJG_admin`.
+Un .bacpac siempre es completo, por eso no hay backup diferencial.
+
+1. Instalar SqlPackage: `dotnet tool install -g microsoft.sqlpackage`
+2. Importar en un servidor que no tenga una base con ese nombre:
+   ```bash
+   sqlpackage /Action:Import /SourceFile:03_backups/TurismoPeru_ADJG_Full.bacpac \
+     /TargetServerName:localhost /TargetDatabaseName:TurismoPeru_ADJG /TargetTrustServerCertificate:True
+   ```
+3. El .bacpac no guarda las contraseñas reales de los logins. Si se crean en la importación, quedan con una
+   contraseña aleatoria, así que se ejecuta `restauracion.sql` para asignarlas:
+   ```bash
+   set -a; source .env; set +a
+   sqlcmd -S localhost -E -C -i 03_backups/restauracion.sql \
+     -v PWD_ADMIN="$PWD_ADMIN" PWD_VENDEDOR="$PWD_VENDEDOR" PWD_ANALISTA="$PWD_ANALISTA"
+   ```
+4. Comparar los conteos con los de `backup_full.sql`.
+
+Se probó restaurando en una instancia local de SQL Server 2025:
+
+| | Original | Restaurada |
+|---|---|---|
+| Tablas / filas | 39 / 4445 | 39 / 4445 |
+| persona / cliente / reserva / pago | 106 / 53 / 102 / 116 | 106 / 53 / 102 / 116 |
+| Suma de pagos | 353575.50 | 353575.50 |
+
+Los usuarios quedaron enlazados a sus logins, los roles con sus miembros y los permisos se mantienen
+(`ADJG_vendedor` puede leer `cliente` pero no borrar).
 
 ## Configuración del reporte
 Pendiente.

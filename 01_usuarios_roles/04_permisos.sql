@@ -40,6 +40,15 @@ GO
 ALTER ROLE db_owner ADD MEMBER rol_admin;
 GO
 
+-- El admin necesita ver los otros logins para exportar el .bacpac
+USE master;
+GRANT VIEW DEFINITION ON LOGIN::ADJG_vendedor TO ADJG_admin;
+GRANT VIEW DEFINITION ON LOGIN::ADJG_analista TO ADJG_admin;
+GO
+
+USE TurismoPeru_ADJG;
+GO
+
 SELECT pr.name AS rol,
        pe.state_desc AS estado,
        pe.permission_name AS permiso,
