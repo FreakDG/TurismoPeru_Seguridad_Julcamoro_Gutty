@@ -1,0 +1,52 @@
+# ===========================================================
+#  .gitignore - TurismoPeru_Seguridad_Julcamoro_Gutty
+#  Evita publicar credenciales y archivos innecesarios.
+# ===========================================================
+
+# --- Credenciales y configuración sensible (NUNCA publicar) ---
+# .env contiene servidor, usuario y contraseñas reales.
+.env
+.env.*
+# Excepción: la plantilla sin valores reales SÍ se publica.
+!.env.example
+*.conn
+*.udl
+*.pfx
+*.pem
+*.key
+*credenciales*
+*secrets*
+
+# --- SQLCMD: archivos locales de variables con contraseñas ---
+*.local.sql
+variables_locales*.sql
+
+# --- Respaldos nativos y archivos de datos de SQL Server ---
+# (el .bacpac SÍ se publica por requerimiento de la evaluación)
+*.bak
+*.trn
+*.ldf
+*.mdf
+*.ndf
+
+# --- Archivos de error / salida generados por bcp ---
+*.err
+*.log
+*.out
+
+# --- Power BI: archivos temporales, caché y configuración local ---
+~$*
+*.pbix.bak
+**/.pbi/localSettings.json
+**/.pbi/cache.abf
+
+# --- Editores / IDE ---
+.vscode/
+.vs/
+*.suo
+*.user
+
+# --- Sistema operativo ---
+Thumbs.db
+desktop.ini
+.DS_Store
