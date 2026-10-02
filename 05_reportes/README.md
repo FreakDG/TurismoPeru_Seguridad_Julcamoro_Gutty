@@ -1,5 +1,8 @@
 # Interpretación de los gráficos
 
+El análisis operativo completo, con capturas de Power BI, gráficos, hallazgos y recomendaciones, está en
+[analisis_operativo_PowerBI.pdf](analisis_operativo_PowerBI.pdf).
+
 Los valores salen de `consultas_reportes.sql`, ejecutado con `ADJG_analista`, y coinciden con el dashboard de Power BI.
 Los ingresos consideran solo pagos con estado `Confirmado`.
 

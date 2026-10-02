@@ -60,6 +60,8 @@ TurismoPeru_Seguridad_Julcamoro_Gutty/
 | `03_backups/restauracion.sql` | Comando de importación, contraseñas de logins y verificación |
 | `03_backups/TurismoPeru_ADJG_Full.bacpac` | Backup completo (esquema y datos) |
 | `04_seguridad/pruebas_permisos.sql` | Pruebas de lo que cada perfil puede y no puede hacer |
+| `05_reportes/consultas_reportes.sql` | Consultas del reporte y validación de indicadores |
+| `05_reportes/analisis_operativo_PowerBI.pdf` | Análisis operativo del reporte en Power BI |
 
 Se usa el prefijo `ADJG` en los logins porque el servidor es compartido. `01_logins.sql` se ejecuta así:
 
