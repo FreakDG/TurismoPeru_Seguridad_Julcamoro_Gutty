@@ -55,6 +55,7 @@ TurismoPeru_Seguridad_Julcamoro_Gutty/
 | `01_usuarios_roles/02_users.sql` | Usuarios en `TurismoPeru_ADJG` |
 | `01_usuarios_roles/03_roles.sql` | Roles `rol_vendedor`, `rol_analista` y `rol_admin` |
 | `01_usuarios_roles/04_permisos.sql` | Permisos de cada rol |
+| `02_importacion_exportacion/importacion.sql` | Exportación con bcp, staging, validación e importación de clientes |
 | `04_seguridad/pruebas_permisos.sql` | Pruebas de lo que cada perfil puede y no puede hacer |
 
 Se usa el prefijo `ADJG` en los logins porque el servidor es compartido. `01_logins.sql` se ejecuta así:
@@ -112,6 +113,29 @@ datos están dentro de una transacción con ROLLBACK, así que no alteran la bas
 Msg 229, Level 14, State 5
 The INSERT permission was denied on the object 'pago', database 'TURISMOPERU_ADJG', schema 'ADJG'.
 ```
+
+## Importación y exportación
+Todo se hace con el login `ADJG_admin`.
+
+1. **Exportación:** con `bcp queryout` se generaron `clientes.csv`, `reservas.csv`, `pago.csv` y
+   `lugaresturisticos.csv` en UTF-8 (`-C 65001`), con encabezado. Los textos que tienen comas van entre comillas.
+2. **Staging:** se crea `ADJG.cliente_importacion` (Documento, Nombres, ApellidoPaterno, ApellidoMaterno),
+   sin restricciones para que la carga no falle por datos malos.
+3. **Importación:** `bcp ADJG.cliente_importacion in clientes.csv ... -F 2` (se salta el encabezado).
+4. **Validación:** cada registro se clasifica como sin documento, formato inválido, faltan nombres,
+   duplicado en el archivo, ya existe en la BD, no es DNI o válido.
+5. **Inserción:** solo los válidos pasan a `persona` y `cliente`, dentro de una transacción. Como el archivo no
+   trae tipo de documento, solo se registra automáticamente un DNI (8 dígitos).
+
+Resultado:
+
+| Registros | Documentos distintos | Duplicados en archivo | Ya existían | Inválidos | Insertados |
+|---|---|---|---|---|---|
+| 53 | 50 | 5 | 48 | 0 | 0 |
+
+El archivo salió de la misma base, así que todos los clientes ya existían y no se insertó nada. Esto confirma que
+la validación evita duplicados. En el archivo se repiten `12345678` (3 veces) y `87654321` (2 veces) porque en la
+base son documentos de distinto tipo con el mismo número.
 
 ## Procedimiento de restauración
 Pendiente.
